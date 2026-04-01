@@ -1,56 +1,32 @@
 package handlers
 
 import (
-	"finance-backend/config"
 	"finance-backend/models"
-	"finance-backend/utils"
+	"finance-backend/services"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
-func Signup(c *gin.Context) {
-	var user models.User
+func CreateRecord(c *gin.Context) {
+	var record models.Record
 
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid input"})
+	if err := c.ShouldBindJSON(&record); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid"})
 		return
 	}
 
-	user.ID = uuid.New().String()
-	user.Password = utils.HashPassword(user.Password)
-	user.Role = "viewer"
+	userID, _ := c.Get("user_id")
 
-	query := `
-	INSERT INTO users (id, name, email, password, role)
-	VALUES ($1, $2, $3, $4, $5)
-	`
-
-	_, err := config.DB.Exec(query, user.ID, user.Name, user.Email, user.Password, user.Role)
+	err := services.CreateRecord(record, userID.(string))
 	if err != nil {
-		c.JSON(500, gin.H{"error": "User creation failed"})
+		c.JSON(500, gin.H{"error": "Failed"})
 		return
 	}
 
-	c.JSON(201, gin.H{"message": "User created"})
+	c.JSON(201, gin.H{"message": "Created"})
 }
 
-func Login(c *gin.Context) {
-	var req models.User
-
-	c.ShouldBindJSON(&req)
-
-	var user models.User
-
-	query := `SELECT id, password, role FROM users WHERE email=$1`
-	err := config.DB.QueryRow(query, req.Email).Scan(&user.ID, &user.Password, &user.Role)
-
-	if err != nil || !utils.CheckPassword(user.Password, req.Password) {
-		c.JSON(401, gin.H{"error": "Invalid credentials"})
-		return
-	}
-
-	token := utils.GenerateToken(user.ID, user.Role)
-
-	c.JSON(200, gin.H{"token": token})
+func GetRecords(c *gin.Context) {
+	records, _ := services.GetRecords()
+	c.JSON(200, records)
 }
