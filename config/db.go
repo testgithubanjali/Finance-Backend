@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -12,7 +13,6 @@ import (
 var DB *sql.DB
 
 func ConnectDB() {
-	// Read from environment variables (Docker will pass these)
 	host := getEnv("DB_HOST", "localhost")
 	user := getEnv("DB_USER", "postgres")
 	password := getEnv("DB_PASSWORD", "postgres")
@@ -24,26 +24,36 @@ func ConnectDB() {
 		host, user, password, dbname, port,
 	)
 
-	log.Println("Connecting to DB...")
+	var db *sql.DB
+	var err error
 
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatal("DB open error:", err)
+	for i := 1; i <= 5; i++ {
+		log.Printf("Connecting to DB... attempt %d", i)
+
+		db, err = sql.Open("postgres", connStr)
+		if err == nil {
+			err = db.Ping()
+			if err == nil {
+				break
+			}
+		}
+
+		log.Println("DB not ready, retrying in 2 seconds...")
+		time.Sleep(2 * time.Second)
 	}
 
-	if err := db.Ping(); err != nil {
-		log.Fatal("DB ping error:", err)
+	if err != nil {
+		log.Fatal(" Could not connect to DB:", err)
 	}
 
 	DB = db
-	log.Println("✅ Connected to PostgreSQL")
+	log.Println(" Connected to PostgreSQL")
 }
 
-// helper function
 func getEnv(key, fallback string) string {
-	value := os.Getenv(key)
-	if value == "" {
+	val := os.Getenv(key)
+	if val == "" {
 		return fallback
 	}
-	return value
+	return val
 }

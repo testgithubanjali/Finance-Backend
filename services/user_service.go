@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"finance-backend/models"
 	"finance-backend/repositories"
 	"finance-backend/utils"
@@ -27,7 +28,7 @@ func Signup(user models.User) error {
 		return err
 	}
 
-	log.Println("Signup: user created successfully")
+	log.Printf("Signup: user created successfully (ID=%s, email=%s)", user.ID, user.Email)
 	return nil
 }
 
@@ -37,20 +38,20 @@ func Login(email, password string) (string, error) {
 	user, err := repositories.GetUserByEmail(email)
 	if err != nil {
 		log.Printf("Login: user not found or DB error = %v", err)
-		return "", err
+		return "", errors.New("invalid credentials")
 	}
 
 	log.Printf("Login: user found, ID = %s", user.ID)
 
 	if !utils.CheckPassword(user.Password, password) {
 		log.Println("Login: password mismatch")
-		return "", err
+		return "", errors.New("invalid credentials")
 	}
 
 	log.Println("Login: password verified")
 
 	token := utils.GenerateToken(user.ID, user.Role)
-	log.Println("Login: token generated")
+	log.Printf("Login: token generated for user ID = %s", user.ID)
 
 	return token, nil
 }
