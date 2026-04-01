@@ -6,11 +6,19 @@ import (
 )
 
 func CreateUser(user models.User) error {
-	query := `INSERT INTO users (id, name, email, password, role) VALUES ($1,$2,$3,$4,$5)`
-	_, err := config.DB.Exec(query, user.ID, user.Name, user.Email, user.Password, user.Role)
-	return err
-}
+	query := `INSERT INTO users (id, name, email, password, role)
+	          VALUES ($1,$2,$3,$4,$5)`
 
+	_, err := config.DB.Exec(query,
+		user.ID, user.Name, user.Email, user.Password, user.Role,
+	)
+
+	if err != nil {
+		return err // 🔥 MUST return error
+	}
+
+	return nil
+}
 func GetUserByEmail(email string) (models.User, error) {
 	var user models.User
 
