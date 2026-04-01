@@ -4,7 +4,6 @@ import (
 	"finance-backend/models"
 	"finance-backend/services"
 	"log"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
