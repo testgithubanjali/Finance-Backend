@@ -15,22 +15,33 @@ func CreateRecord(c *gin.Context) {
 	var record models.Record
 
 	if err := c.ShouldBindJSON(&record); err != nil {
-		log.Printf("Record: CreateRecord invalid payload: %v", err)
+		log.Printf("Record: invalid payload: %v", err)
 		c.JSON(400, gin.H{"error": "Invalid"})
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	log.Printf("Record: CreateRecord request user_id=%s type=%s amount=%.2f", userID, record.Type, record.Amount)
+	userIDVal, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
 
-	err := services.CreateRecord(record, userID.(string))
+	uid, ok := userIDVal.(string)
+	if !ok || uid == "" {
+		c.JSON(401, gin.H{"error": "Invalid user"})
+		return
+	}
+
+	log.Printf("Record: CreateRecord user_id=%s type=%s amount=%.2f", uid, record.Type, record.Amount)
+
+	err := services.CreateRecord(record, uid)
 	if err != nil {
-		log.Printf("Record: CreateRecord failed user_id=%s error=%v", userID, err)
+		log.Printf("Record: failed user_id=%s error=%v", uid, err)
 		c.JSON(500, gin.H{"error": "Failed"})
 		return
 	}
 
-	log.Printf("Record: CreateRecord succeeded user_id=%s id=%s", userID, record.ID)
+	log.Printf("Record: succeeded user_id=%s id=%s", uid, record.ID)
 	c.JSON(201, gin.H{"message": "Created"})
 }
 func GetRecords(c *gin.Context) {
@@ -81,10 +92,10 @@ func UpdateRecord(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Invalid input"})
 		return
 	}
-
 	err := services.UpdateRecord(id, record)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to update"})
+		log.Printf("Update error: %v", err)
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 

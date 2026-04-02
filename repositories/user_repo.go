@@ -8,6 +8,7 @@ import (
 
 func CreateUser(user models.User) error {
 	log.Printf("UserRepo: CreateUser email=%s role=%s", user.Email, user.Role)
+
 	query := `INSERT INTO users (id, name, email, password, role)
 	          VALUES ($1,$2,$3,$4,$5)`
 
@@ -23,18 +24,22 @@ func CreateUser(user models.User) error {
 	log.Printf("UserRepo: CreateUser succeeded email=%s id=%s", user.Email, user.ID)
 	return nil
 }
-
 func GetUserByEmail(email string) (models.User, error) {
 	var user models.User
 
-	query := `SELECT id, password, role FROM users WHERE email=$1`
-	err := config.DB.QueryRow(query, email).Scan(&user.ID, &user.Password, &user.Role)
+	query := `SELECT id, password, role, is_active FROM users WHERE email=$1`
+
+	err := config.DB.QueryRow(query, email).
+		Scan(&user.ID, &user.Password, &user.Role, &user.IsActive)
+
 	if err != nil {
 		log.Printf("UserRepo: GetUserByEmail failed email=%s error=%v", email, err)
-		return user, err
+		return models.User{}, err
 	}
 
-	log.Printf("UserRepo: GetUserByEmail found id=%s email=%s role=%s", user.ID, email, user.Role)
+	log.Printf("UserRepo: found id=%s email=%s role=%s active=%v",
+		user.ID, email, user.Role, user.IsActive)
+
 	return user, nil
 }
 func UpdateUserStatus(id string, isActive bool) error {

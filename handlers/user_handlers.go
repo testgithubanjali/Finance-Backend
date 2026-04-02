@@ -9,32 +9,34 @@ import (
 )
 
 func UpdateUserRole(c *gin.Context) {
+	log.Println("User: UpdateUserRole started")
+
 	id := c.Param("id")
-	log.Printf("UserHandler: UpdateUserRole started id=%s", id)
 
 	var body struct {
-		Role string `json:"role"`
+		Role string `json:"role" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&body); err != nil {
-		log.Printf("UserHandler: UpdateUserRole invalid input id=%s error=%v", id, err)
 		c.JSON(400, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	log.Printf("UserHandler: UpdateUserRole request id=%s role=%s", id, body.Role)
+	log.Printf("User: updating role id=%s new_role=%s", id, body.Role)
+
 	_, err := config.DB.Exec(
 		"UPDATE users SET role=$1 WHERE id=$2",
-		body.Role, id,
+		body.Role,
+		id,
 	)
 
 	if err != nil {
-		log.Printf("UserHandler: UpdateUserRole failed id=%s role=%s error=%v", id, body.Role, err)
-		c.JSON(500, gin.H{"error": "Failed"})
+		log.Printf("User: update failed id=%s error=%v", id, err)
+
+		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Printf("UserHandler: UpdateUserRole succeeded id=%s role=%s", id, body.Role)
 	c.JSON(200, gin.H{"message": "Role updated"})
 }
 
