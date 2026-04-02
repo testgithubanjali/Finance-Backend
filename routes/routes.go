@@ -27,6 +27,10 @@ func SetupRoutes(r *gin.Engine) {
 		auth.POST("/records", middleware.Authorize("admin"), handlers.CreateRecord)
 
 		auth.GET("/dashboard", handlers.GetSummary)
+		auth.PUT("/records/:id", middleware.Authorize("admin"), handlers.UpdateRecord)
+		auth.DELETE("/records/:id", middleware.Authorize("admin"), handlers.DeleteRecord)
+		auth.PATCH("/users/:id/role", middleware.Authorize("admin"), handlers.UpdateUserRole)
+		auth.PATCH("/users/:id/status", middleware.Authorize("admin"), handlers.UpdateUserStatus)
 	}
 
 	log.Println("Routes: route setup complete")

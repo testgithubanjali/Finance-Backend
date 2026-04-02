@@ -23,7 +23,7 @@ func Signup(c *gin.Context) {
 	err := services.Signup(user)
 	if err != nil {
 		log.Printf("Signup: failed to create user email=%s: %v", user.Email, err)
-		c.JSON(400, gin.H{"error": err.Error()}) // 🔥 SHOW ERROR
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 

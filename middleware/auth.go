@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"finance-backend/repositories"
 	"finance-backend/utils"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Printf("AuthMiddleware: processing %s %s", c.Request.Method, c.Request.URL.Path)
 		authHeader := c.GetHeader("Authorization")
 
 		if authHeader == "" {
@@ -34,6 +36,20 @@ func AuthMiddleware() gin.HandlerFunc {
 		if err != nil {
 			log.Printf("AuthMiddleware: token validation failed: %v", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+		user, err := repositories.GetUserByID(userID)
+		if err != nil {
+			log.Printf("AuthMiddleware: failed to fetch user: %v", err)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+			c.Abort()
+			return
+		}
+
+		if !user.IsActive {
+			log.Printf("AuthMiddleware: inactive user_id=%s", userID)
+			c.JSON(http.StatusForbidden, gin.H{"error": "User is inactive"})
 			c.Abort()
 			return
 		}

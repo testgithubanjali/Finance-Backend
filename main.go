@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	log.Println("🚀 Starting Finance Backend...")
+	log.Println("Starting Finance Backend...")
 
 	config.ConnectDB()
 
@@ -17,6 +17,6 @@ func main() {
 
 	routes.SetupRoutes(r)
 
-	log.Println("🌐 Server running on port 8080")
+	log.Println(" cd4Server running on port 8080")
 	r.Run(":8080")
 }

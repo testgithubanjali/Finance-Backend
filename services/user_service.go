@@ -47,6 +47,10 @@ func Login(email, password string) (string, error) {
 		log.Println("Login: password mismatch")
 		return "", errors.New("invalid credentials")
 	}
+	if !user.IsActive {
+		log.Println("Login: user is inactive")
+		return "", errors.New("user is inactive")
+	}
 
 	log.Println("Login: password verified")
 
@@ -54,4 +58,9 @@ func Login(email, password string) (string, error) {
 	log.Printf("Login: token generated for user ID = %s", user.ID)
 
 	return token, nil
+}
+func UpdateUserStatus(id string, isActive bool) error {
+	log.Printf("Service: updating user status id=%s active=%v", id, isActive)
+
+	return repositories.UpdateUserStatus(id, isActive)
 }
